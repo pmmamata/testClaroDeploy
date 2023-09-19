@@ -115,7 +115,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                         System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
                         if(sourceKeyClassMap.containskey((String)tempMap.get('Code'))){
 							for(String classKey: sourceKeyClassMap.get((String)tempMap.get('Code'))){
-								attrCodeValueMap.get(classKey).put(sourceKeyClassMap.get((String)tempMap.get('Code')) , (String)tempMap.get('SegmentValue'));
+								attrCodeValueMap.get(classKey).put(sourceAndTargetAttrByClassName.get(classKey).get((String)tempMap.get('Code')) , (String)tempMap.get('SegmentValue'));
 							}
 						}
                     }
