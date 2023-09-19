@@ -95,7 +95,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
         
 		String attrCatCode = IntegrationSystemInterfaceHelper.getTechAttributeCategoryCode();
         List<Object> allAttrList = new List<Object>();
-        
+        EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
         for(Map <String, Object> outputDRMap : getDRResult){
             System.debug('====key====='+outputDRMap);
             Map<String, Object> tempMap = new Map<String, Object>();
@@ -111,6 +111,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                     allAttrList = (List<Object>)JSON.deserializeUntyped(JSON.serialize(deserialisedMap.get(attrCatCode))); 
                     for(Object key2: allAttrList){
                         tempMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(key2));
+                        
                         System.debug('===key2=Code  ====='+tempMap.get('Code'));
                         System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
                         if(sourceKeyClassMap.containskey((String)tempMap.get('Code'))){
@@ -122,11 +123,20 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                     
                 }
             }
-            tempMap.put('action',action);
+            
+            for(String classKey: sourceKeyClassMap.get('action')){
+				attrCodeValueMap.get(classKey).put(sourceAndTargetAttrByClassName.get(classKey).get('action') , (String)tempMap.get('SegmentValue'));
+			}
+            EricsonRequestJSON.cls_item jsonItem = new EricsonRequestJSON.cls_item();
+          	
+            jsonItem = (EricsonRequestJSON.cls_item)System.JSON.deserialize(JSON.serialize(attrCodeValueMap.get('cls_item')), EricsonRequestJSON.cls_item.class);
+            
         }
+        
+        
         System.debug('====sourceKeyClassMap======'+sourceKeyClassMap);
 		System.debug('====attrCodeValueMap======'+attrCodeValueMap);
-        EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
+        //EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
         instEricsonReq.orderItems = new List<EricsonRequestJSON.cls_orderItems>();
         Map<String, String> actionAndFulfilmentId = new Map<String, String>();
 
@@ -139,26 +149,20 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
         String techAttr = 'TechAttr';
         
         for(String sfulfillmentId : attrCodeValueMap.keyset()){
-            EricsonRequestJSON.cls_item jsonItem = new EricsonRequestJSON.cls_item();
             
-            for(String key : sourceAndTargetAttrByClassName.keySet()){
-                if(key.equalsIgnoreCase('cls_item')){
-                    
-                }
-            }
-            jsonItem.id = String.valueOf(itemCounter);
+            /*jsonItem.id = String.valueOf(itemCounter);
             jsonItem.orderType = (String)attrCodeValueMap.get(sfulfillmentId).get(techItem+'OrderType');
             jsonItem.orderSpecification = (String)attrCodeValueMap.get(sfulfillmentId).get(techItem+'OrderSpecification');
             jsonItem.action = actionAndFulfilmentId.get(OrderIntegrationSystemInterfaceConstants.ACTION);
             jsonItem.productOffering = new EricsonRequestJSON.cls_productOffering();
             
             jsonItem.product = new EricsonRequestJSON.cls_product();
-            jsonItem.product.productCharacteristics = new List<EricsonRequestJSON.cls_productCharacteristics>();
+            jsonItem.product.productCharacteristics = new List<EricsonRequestJSON.cls_productCharacteristics>();*/
             for(String sKey : ''.split(',')){
                 
             }
             
-            jsonItem.product.productId = '';
+            /*jsonItem.product.productId = '';
             jsonItem.product.productPrice = new List<EricsonRequestJSON.cls_productPrice>();
             jsonItem.product.isBundled = true;
             
@@ -168,7 +172,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
             
             jsonItem.relatedOrderItems = new List<EricsonRequestJSON.cls_relatedOrderItems>();
             
-            jsonItem.relatedEntities = new List<EricsonRequestJSON.cls_OIrelatedEntities>();
+            jsonItem.relatedEntities = new List<EricsonRequestJSON.cls_OIrelatedEntities>();*/
         }
         
         System.debug('=====attrCodeValueMap====='+attrCodeValueMap);
