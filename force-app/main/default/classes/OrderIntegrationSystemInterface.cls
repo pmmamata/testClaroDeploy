@@ -87,12 +87,15 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
         Map<String,Set<String>> sourceKeyClassMap = new Map<String,Set<String>>();
 		for(String key1 : sourceAndTargetAttrByClassName.keyset()){
 			attrCodeValueMap.put(key1, new Map<String,Object>());
-			for(String key2 : sourceAndTargetAttrByClassName.get(key1)){
+			for(String key2 : sourceAndTargetAttrByClassName.get(key1).keyset()){
 				if(!sourceKeyClassMap.containskey(key2)) sourceKeyClassMap.put(key2, new Set<String>());
 				sourceKeyClassMap.get(key2).add(key1);
 			}
 		}
-		
+        
+		String attrCatCode = IntegrationSystemInterfaceHelper.getTechAttributeCategoryCode();
+        List<Object> allAttrList = new List<Object>();
+        
         for(Map <String, Object> outputDRMap : getDRResult){
             System.debug('====key====='+outputDRMap);
             Map<String, Object> tempMap = new Map<String, Object>();
@@ -110,9 +113,9 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                         tempMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(key2));
                         System.debug('===key2=Code  ====='+tempMap.get('Code'));
                         System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
-                        if(sourceKeyClassMap.containskey(tempMap.get('Code'))){
-							for(String classKey: sourceKeyClassMap.get(tempMap.get('Code'))){
-								attrCodeValueMap.get(classKey).put(tempMap.get('Code') , (String)tempMap.get('SegmentValue'));
+                        if(sourceKeyClassMap.containskey((String)tempMap.get('Code'))){
+							for(String classKey: sourceKeyClassMap.get((String)tempMap.get('Code'))){
+								attrCodeValueMap.get(classKey).put((String)tempMap.get('Code') , (String)tempMap.get('SegmentValue'));
 							}
 						}
                     }
@@ -122,17 +125,10 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
             tempMap.put('action',action);
         }
 		
-		
-		
-		
-		
-		
-		
-		
-        
         EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
         instEricsonReq.orderItems = new List<EricsonRequestJSON.cls_orderItems>();
-        
+        Map<String, String> actionAndFulfilmentId = new Map<String, String>();
+
         Integer itemCounter = 0;
         String techItem = 'TechItem';
         String techATR = 'TechATR';
