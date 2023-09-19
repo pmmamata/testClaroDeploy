@@ -52,7 +52,6 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
 * @param item  OrchestrationItem that needs to be executed
 */
     global override void executeItem(String url, String path, vlocity_cmt__OrchestrationItem__c item) {
-        
         Map<String, Map<String,String>> sourceAndTargetAttrByClassName = OrderIntegrationSystemInterfaceUtility.getOMEricsonMappings();
         
         System.debug(' - Orchestration Item -> ' + JSON.serialize(item.getPopulatedFieldsAsMap()));
@@ -76,80 +75,60 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
             accountId = orchItem.vlocity_cmt__OrchestrationPlanId__r.vlocity_cmt__OrderId__r.AccountId;
             orchestrationPlanId = orchItem.vlocity_cmt__OrchestrationPlanId__c;
         }
-        
-        system.debug('orderId: ---------->'+orderId);
-        
-        system.debug('orchestrationPlanId: ---------->'+orchestrationPlanId);
-        
         Map<String, Object> ipInput   = (Map<String, Object>)JSON.deserializeUntyped('{"OrderId" : "'+orderId+'","AccountId":"'+accountId+'","OrchestrationPlanId":"'+orchestrationPlanId+'"}');        
         Map<String, Object> ipOptions = new Map<String, Object>();
-        
+		
         Map<String, Object> inputParamsDR = (Map<String, Object>)JSON.deserializeUntyped('{"OrchestrationPlanId":"'+orchestrationPlanId+'"}');   
-        
         List<Map <String, Object>> getDRResult = IntegrationSystemInterfaceHelper.callDrExtract(inputParamsDR, 'OM_DR_Extract_RequestLineItemByOrchPlanId');
         
-        String jsongetDRResult = JSON.serialize(getDRResult);
-        
-        System.debug('===getDRResult==mamata='+getDRResult);
-        
-        System.debug('===jsongetDRResult==mamata123='+jsongetDRResult);
-        
-        String attrCatCode = IntegrationSystemInterfaceHelper.getTechAttributeCategoryCode();
-        
-        List<Object> allAttrList = new List<Object>();
-        
-        Map<String, Map<String, Object>> attrCodeValueMap = new Map<String, Map<String, Object>>();
-        Map<String, String> actionAndFulfilmentId = new Map<String, String>();
-        
+		
+		
+		Map<String, Map<String, Object>> attrCodeValueMap = new Map<String, Map<String, Object>>();
+        Map<String,Set<String>> sourceKeyClassMap = new Map<String,Set<String>>();
+		for(String key1 : sourceAndTargetAttrByClassName.keyset()){
+			attrCodeValueMap.put(key1, new Map<String,Object>());
+			for(String key2 : sourceAndTargetAttrByClassName.get(key1)){
+				if(!sourceKeyClassMap.containskey(key2)) sourceKeyClassMap.put(key2, new Set<String>());
+				sourceKeyClassMap.get(key2).add(key1);
+			}
+		}
+		
         for(Map <String, Object> outputDRMap : getDRResult){
             System.debug('====key====='+outputDRMap);
             Map<String, Object> tempMap = new Map<String, Object>();
             String fulfilmentId = '';
             String action = '';
             for(String key1 : outputDRMap.keySet()){
-                System.debug('=====key1======='+key1);
-                System.debug('===deserialize====='+(JSON.serialize(outputDRMap.get(key1))));
-                System.debug('===deserialize====='+JSON.deserializeUntyped(JSON.serialize(outputDRMap.get(key1))));
-                if((OrderIntegrationSystemInterfaceConstants.FULFILMENTID_AND_ACTION).contains(key1)){
-                    attrCodeValueMap.put((String)outputDRMap.get(key1), new Map<String,String>());
-                    //fulfilmentId = (String)outputDRMap.get(key1);
-                    if(key1.equalsIgnoreCase('Action')){
-                        action = (String)outputDRMap.get(key1);
-                    }
-                    actionAndFulfilmentId.put(key1, (String)outputDRMap.get(key1));
-                }
-                if(!key1.equals(OrderIntegrationSystemInterfaceConstants.FULFILMENTID)){
-                    System.debug('==inside if======'+key1);
-                    
+				if(key1.equalsIgnoreCase('Action')){
+					action = (String)outputDRMap.get(key1);
+				}else if(key1.equalsIgnoreCase('fulfilmentId')){
+					fulfilmentId = (String)outputDRMap.get(key1);
+				}else if(!key1.equals(OrderIntegrationSystemInterfaceConstants.FULFILMENTID)){
                     Map<String, Object> deserialisedMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(outputDRMap.get(key1))) ;
-                    System.debug('==inside if==1===='+deserialisedMap.keySet());
-                    System.debug('========JSON.serialize(deserialisedMap.get(attrCatCode))====='+JSON.serialize(deserialisedMap.get(attrCatCode)));
                     allAttrList = (List<Object>)JSON.deserializeUntyped(JSON.serialize(deserialisedMap.get(attrCatCode))); 
-                    
-                    System.debug('====allAttrList======'+allAttrList);
-                    
                     for(Object key2: allAttrList){
-                        
                         tempMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(key2));
                         System.debug('===key2=Code  ====='+tempMap.get('Code'));
                         System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
-                        System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
-                        
-                        //define one Map each for type of characteristics available
-                        //product 
-                        //resources 
-                        //services 
-                        //relatedOrderItems 
-                        //relatedEntities 
-                        //attrs 
-                        
+                        if(sourceKeyClassMap.containskey(tempMap.get('Code'))){
+							for(String classKey: sourceKeyClassMap.get(tempMap.get('Code'))){
+								attrCodeValueMap.get(classKey).put(tempMap.get('Code') , (String)tempMap.get('SegmentValue'));
+							}
+						}
                     }
                     
                 }
             }
             tempMap.put('action',action);
-            attrCodeValueMap.put(actionAndFulfilmentId.get(OrderIntegrationSystemInterfaceConstants.FULFILMENTID), tempMap);
         }
+		
+		
+		
+		
+		
+		
+		
+		
         
         EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
         instEricsonReq.orderItems = new List<EricsonRequestJSON.cls_orderItems>();
