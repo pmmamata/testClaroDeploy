@@ -133,53 +133,9 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
             
             jsonItem = (EricsonRequestJSON.cls_item)System.JSON.deserialize(JSON.serialize(attrCodeValueMap.get('cls_item')), EricsonRequestJSON.cls_item.class);
             
-            
-            
         }
         
         
-        System.debug('====sourceKeyClassMap======'+sourceKeyClassMap);
-		System.debug('====attrCodeValueMap======'+attrCodeValueMap);
-        //EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
-        instEricsonReq.orderItems = new List<EricsonRequestJSON.cls_orderItems>();
-        Map<String, String> actionAndFulfilmentId = new Map<String, String>();
-
-        Integer itemCounter = 0;
-        String techItem = 'TechItem';
-        String techATR = 'TechATR';
-        String techPC = 'TechPC';
-        String techSC = 'TechSC';
-        String techRC = 'TechRC';
-        String techAttr = 'TechAttr';
-        
-        for(String sfulfillmentId : attrCodeValueMap.keyset()){
-            
-            /*jsonItem.id = String.valueOf(itemCounter);
-            jsonItem.orderType = (String)attrCodeValueMap.get(sfulfillmentId).get(techItem+'OrderType');
-            jsonItem.orderSpecification = (String)attrCodeValueMap.get(sfulfillmentId).get(techItem+'OrderSpecification');
-            jsonItem.action = actionAndFulfilmentId.get(OrderIntegrationSystemInterfaceConstants.ACTION);
-            jsonItem.productOffering = new EricsonRequestJSON.cls_productOffering();
-            
-            jsonItem.product = new EricsonRequestJSON.cls_product();
-            jsonItem.product.productCharacteristics = new List<EricsonRequestJSON.cls_productCharacteristics>();*/
-            for(String sKey : ''.split(',')){
-                
-            }
-            
-            /*jsonItem.product.productId = '';
-            jsonItem.product.productPrice = new List<EricsonRequestJSON.cls_productPrice>();
-            jsonItem.product.isBundled = true;
-            
-            jsonItem.resources = new List<EricsonRequestJSON.cls_resources>();
-            
-            jsonItem.services = new List<EricsonRequestJSON.cls_services>();
-            
-            jsonItem.relatedOrderItems = new List<EricsonRequestJSON.cls_relatedOrderItems>();
-            
-            jsonItem.relatedEntities = new List<EricsonRequestJSON.cls_OIrelatedEntities>();*/
-        }
-        
-        System.debug('=====attrCodeValueMap====='+attrCodeValueMap);
         // Add any extra information to the payload that might be useful and otherwise not available via the DataRaptors configured in the Callout
         ipInput.put('orchestration_item_id',   item.Id);
         ipInput.put('orchestration_item_name', item.Name);       
