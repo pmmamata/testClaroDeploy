@@ -115,7 +115,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                         System.debug('===key2=SegmentValue ===='+tempMap.get('SegmentValue'));
                         if(sourceKeyClassMap.containskey((String)tempMap.get('Code'))){
 							for(String classKey: sourceKeyClassMap.get((String)tempMap.get('Code'))){
-								attrCodeValueMap.get(classKey).put((String)tempMap.get('Code') , (String)tempMap.get('SegmentValue'));
+								attrCodeValueMap.get(classKey).put(sourceKeyClassMap.get((String)tempMap.get('Code')) , (String)tempMap.get('SegmentValue'));
 							}
 						}
                     }
@@ -124,7 +124,8 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
             }
             tempMap.put('action',action);
         }
-		
+        System.debug('====sourceKeyClassMap======'+sourceKeyClassMap);
+		System.debug('====attrCodeValueMap======'+attrCodeValueMap);
         EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
         instEricsonReq.orderItems = new List<EricsonRequestJSON.cls_orderItems>();
         Map<String, String> actionAndFulfilmentId = new Map<String, String>();
