@@ -52,7 +52,7 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
 * @param item  OrchestrationItem that needs to be executed
 */
     global override void executeItem(String url, String path, vlocity_cmt__OrchestrationItem__c item) {
-        Map<String, Map<String,String>> sourceAndTargetAttrByClassName = OrderIntegrationSystemInterfaceUtility.getOMEricsonMappings();
+        Map<String, Map<String,String>> sourceAndTargetAttrByClassName = OrderIntegrationSystemInterfaceUtility.getOMEricsonMappings();//get all custom metadata records by classname with source and target
         
         System.debug(' - Orchestration Item -> ' + JSON.serialize(item.getPopulatedFieldsAsMap()));
         
@@ -83,22 +83,22 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
         
 		
 		
-		Map<String, Map<String, Object>> attrCodeValueMap = new Map<String, Map<String, Object>>();
-        Map<String,Set<String>> sourceKeyClassMap = new Map<String,Set<String>>();
+		Map<String, Map<String, Object>> attrCodeValueMap = new Map<String, Map<String, Object>>(); //for each class item, assign value to target key : Map<ClassName, Map<TargetKey, Value>>
+        Map<String,Set<String>> sourceKeyClassMap = new Map<String,Set<String>>(); //associate sourceKey with ClassName: sourceKey, set<AllClassNamesSourceKeyBelongsTo>
 		for(String key1 : sourceAndTargetAttrByClassName.keyset()){
-			attrCodeValueMap.put(key1, new Map<String,Object>());
+			attrCodeValueMap.put(key1, new Map<String,Object>());//key1 = list of class, allocate memory
 			for(String key2 : sourceAndTargetAttrByClassName.get(key1).keyset()){
-				if(!sourceKeyClassMap.containskey(key2)) sourceKeyClassMap.put(key2, new Set<String>());
-				sourceKeyClassMap.get(key2).add(key1);
+				if(!sourceKeyClassMap.containskey(key2)) sourceKeyClassMap.put(key2, new Set<String>()); // key2 : source Column from MDT
+                sourceKeyClassMap.get(key2).add(key1);//retrieve source column and associate it with respective className, sourceKeyClassMap<SourceKey, {c1', 'c2', 'c3'}>
 			}
 		}
         
-		String attrCatCode = IntegrationSystemInterfaceHelper.getTechAttributeCategoryCode();
-        List<Object> allAttrList = new List<Object>();
+		String attrCatCode = IntegrationSystemInterfaceHelper.getTechAttributeCategoryCode();//get category code of attribute category
+        //List<Object> allAttrList = new List<Object>(); // list to add all attributes of FRS
         EricsonRequestJSON instEricsonReq = new EricsonRequestJSON();
-        for(Map <String, Object> outputDRMap : getDRResult){
+        for(Map <String, Object> outputDRMap : getDRResult){ // iterate over all FRS JSON received
             System.debug('====key====='+outputDRMap);
-            Map<String, Object> tempMap = new Map<String, Object>();
+            Map<String, Object> tempMap = new Map<String, Object>(); //FRS each item characteristics as key and value
             String fulfilmentId = '';
             String action = '';
             for(String key1 : outputDRMap.keySet()){
@@ -106,10 +106,10 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
 					action = (String)outputDRMap.get(key1);
 				}else if(key1.equalsIgnoreCase('fulfilmentId')){
 					fulfilmentId = (String)outputDRMap.get(key1);
-				}else if(!key1.equals(OrderIntegrationSystemInterfaceConstants.FULFILMENTID)){
-                    Map<String, Object> deserialisedMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(outputDRMap.get(key1))) ;
-                    allAttrList = (List<Object>)JSON.deserializeUntyped(JSON.serialize(deserialisedMap.get(attrCatCode))); 
-                    for(Object key2: allAttrList){
+				}else {
+                    Map<String, Object> deserialisedMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(outputDRMap.get(key1))) ; //attributecategory id=>all techAttribute items
+                    //allAttrList = (List<Object>)JSON.deserializeUntyped(JSON.serialize(deserialisedMap.get(attrCatCode))); // get all items of under a attributeCategoryCode
+                    for(Object key2: (List<Object>)JSON.deserializeUntyped(JSON.serialize(deserialisedMap.get(attrCatCode)))){
                         tempMap = (Map<String, Object>)JSON.deserializeUntyped(JSON.serialize(key2));
                         
                         System.debug('===key2=Code  ====='+tempMap.get('Code'));
@@ -123,13 +123,17 @@ global class OrderIntegrationSystemInterface extends vlocity_cmt.DefaultSystemIn
                     
                 }
             }
+            System.debug('===sourceKeyClassMap'+sourceKeyClassMap);
             
-            for(String classKey: sourceKeyClassMap.get('action')){
-				attrCodeValueMap.get(classKey).put(sourceAndTargetAttrByClassName.get(classKey).get('action') , (String)tempMap.get('SegmentValue'));
-			}
+            for(String classKey: sourceKeyClassMap.get('Action')){
+                attrCodeValueMap.get(classKey).put(sourceAndTargetAttrByClassName.get(classKey).get('Action') , action);
+            }
+            System.debug('====attrCodeValueMap==131==='+attrCodeValueMap);
             EricsonRequestJSON.cls_item jsonItem = new EricsonRequestJSON.cls_item();
-          	
+            
             jsonItem = (EricsonRequestJSON.cls_item)System.JSON.deserialize(JSON.serialize(attrCodeValueMap.get('cls_item')), EricsonRequestJSON.cls_item.class);
+            
+            
             
         }
         
